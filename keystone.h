@@ -31,7 +31,7 @@ extern struct miscdevice keystone_dev;
 #define SBI_SM_RUN_ENCLAVE      105
 #define SBI_SM_STOP_ENCLAVE     106
 #define SBI_SM_RESUME_ENCLAVE   107
-#define SBI_SM_EXTEND_ENCLAVE   108
+#define SBI_SM_EXTEND_ENCLAVE   109
 
 /* error codes: need to add more */
 #define ENCLAVE_INTERRUPTED     2
@@ -77,6 +77,7 @@ typedef struct epm_t {
   unsigned long order;
   paddr_t pa;
   bool is_cma;
+  int tmp_dynamic_pages;
 } epm_t;
 
 typedef struct utm_t {
@@ -128,6 +129,7 @@ int utm_destroy(utm_t* utm);
 int utm_init(utm_t* utm, size_t untrusted_size);
 int epm_clean_free_list(epm_t* epm);
 int utm_clean_free_list(utm_t* utm);
+int epm_request_extend(epm_t* epm, uintptr_t pages);
 paddr_t epm_va_to_pa(epm_t* epm, vaddr_t addr);
 paddr_t epm_get_free_pa(epm_t* epm);
 vaddr_t utm_alloc_page(utm_t* utm, epm_t* epm, vaddr_t addr, unsigned long flags);

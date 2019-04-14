@@ -84,18 +84,19 @@ int epm_init(epm_t* epm, unsigned int min_pages)
   order = ilog2(min_pages - 1) + 1;
   count = 0x1 << order;
 
+  // allocate 2x more pages to simulate dynamic page allocation
+  epm->tmp_dynamic_pages = count;
   count *= 2;
   order += 1;
+
   /* prevent kernel from complaining about an invalid argument */
   if (order <= MAX_ORDER)
-    // allcoate 2x more pages to simulate dynamic page allocation
     epm_vaddr = (vaddr_t) __get_free_pages(GFP_HIGHUSER, order);
 
 #ifdef CONFIG_CMA
   /* If buddy allocator fails, we fall back to the CMA */
   if (!epm_vaddr) {
     epm->is_cma = 1;
-    count = min_pages * 2;
 
     epm_vaddr = (vaddr_t) dma_alloc_coherent(keystone_dev.this_device,
       // allocate one more page to simulate dynamic page allocation
@@ -144,6 +145,19 @@ int epm_clean_free_list(epm_t* epm)
     kfree(page);
   }
   return 0;
+}
+
+/* Returns the number of pages actually allocated */
+int epm_request_extend(epm_t* epm, uintptr_t pages){
+  // We doubled the initial allocation for testing, so assume there
+  // are good pages available.
+  if(epm->tmp_dynamic_pages >= pages){
+    epm->tmp_dynamic_pages = epm->tmp_dynamic_pages - pages;
+    return pages;
+  }
+  else{
+    return 0;
+  }
 }
 
 int utm_destroy(utm_t* utm){
