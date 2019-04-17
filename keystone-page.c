@@ -91,7 +91,7 @@ int epm_init(epm_t* epm, unsigned int min_pages)
    * allocate more pages to simulate dynamic page allocation, always CMA
    */
   epm->tmp_dynamic_pages = EPM_OVERSIZE - count;
-  epm->oversize = (0x1 << order) << PAGE_SHIFT;
+  epm->oversize = EPM_OVERSIZE << PAGE_SHIFT;
 
   /* /\* prevent kernel from complaining about an invalid argument *\/ */
   /* if (order <= MAX_ORDER){ */
