@@ -107,11 +107,9 @@ int __run_enclave_loop(uintptr_t sbi_code, unsigned int sm_eid, enclave_t* encla
     else if(ret == ENCLAVE_REQUEST_FREEMEM)
     {
       uintptr_t pages = sbi_return >> 16;
+      //keystone_info("extending enclave attempt %lu [size: %lu]\n",SBI_SM_EXTEND_ENCLAVE, pages*RISCV_PGSIZE);
       int extended = epm_request_extend(enclave->epm, pages);
-      //keystone_info("extending enclave attempt %lu, %lu [size: %lu]\n",SBI_SM_EXTEND_ENCLAVE, extended, pages*RISCV_PGSIZE);
       sbi_return = SBI_CALL_2(SBI_SM_EXTEND_ENCLAVE, sm_eid, extended*RISCV_PGSIZE);
-      /* if(sbi_return) */
-      /*   keystone_err("SM_EXTEND returned %lu\n", sbi_return); */
     }
     else
     {

@@ -86,27 +86,24 @@ int epm_init(epm_t* epm, unsigned int min_pages)
   /* try to allocate contiguous memory */
   epm->is_cma = 0;
   order = ilog2(min_pages - 1) + 1;
-  count = 0x1 << order;
 
   /* START SIM MODIFICATIONS
-   * allocate more pages to simulate dynamic page allocation
+   * allocate more pages to simulate dynamic page allocation, always CMA
    */
-
-  order = ilog2(EPM_OVERSIZE) + 1;
-  epm->tmp_dynamic_pages = (0x1 << order) - count;
+  epm->tmp_dynamic_pages = EPM_OVERSIZE - count;
   epm->oversize = (0x1 << order) << PAGE_SHIFT;
-  /* STOP SIM MODIFICATIONS */
 
-
-  /* prevent kernel from complaining about an invalid argument */
-  if (order <= MAX_ORDER)
-    epm_vaddr = (vaddr_t) __get_free_pages(GFP_HIGHUSER, order);
-
+  /* /\* prevent kernel from complaining about an invalid argument *\/ */
+  /* if (order <= MAX_ORDER){ */
+  /*   epm_vaddr = (vaddr_t) __get_free_pages(GFP_HIGHUSER, order); */
+  /*   count = 0x1 << order; */
+  /* } */
 #ifdef CONFIG_CMA
   /* If buddy allocator fails, we fall back to the CMA */
   if (!epm_vaddr) {
     epm->is_cma = 1;
 
+    /* SIM MODIFICATION: ALWAYS OVERSIZE */
     epm_vaddr = (vaddr_t) dma_alloc_coherent(keystone_dev.this_device,
       epm->oversize,
       &device_phys_addr,
@@ -116,6 +113,7 @@ int epm_init(epm_t* epm, unsigned int min_pages)
       epm_vaddr = 0;
   }
 #endif
+  /* STOP SIM MODIFICATIONS */
 
   if(!epm_vaddr) {
     keystone_err("failed to allocate %lu page(s) [CMA:%d]\n", count, epm->is_cma);
@@ -134,11 +132,8 @@ int epm_init(epm_t* epm, unsigned int min_pages)
 
   epm->root_page_table = t;
   epm->pa = __pa(epm_vaddr);
-
-  /* START SIM MODIFICATIONS */
-  epm->order = ilog2(min_pages) + 1;
-  epm->size = (1<<epm->order) << PAGE_SHIFT;
-  /* STOP SIM MODIFICATIONS */
+  epm->order = order;
+  epm->size = count << PAGE_SHIFT;
 
   epm->ptr = epm_vaddr;
 
