@@ -68,6 +68,10 @@ struct free_page_t {
   struct list_head freelist;
 };
 
+/* START SIM MODIFICATIONS */
+// Request 512MB of pages
+#define EPM_OVERSIZE 131072
+
 /* enclave private memory */
 typedef struct epm_t {
   struct list_head epm_free_list;
@@ -78,7 +82,10 @@ typedef struct epm_t {
   paddr_t pa;
   bool is_cma;
   int tmp_dynamic_pages;
+  unsigned long oversize;
 } epm_t;
+
+/* END SIM MODIFICATIONS */
 
 typedef struct utm_t {
   struct list_head utm_free_list;

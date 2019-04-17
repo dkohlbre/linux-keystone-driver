@@ -44,7 +44,7 @@ int keystone_finalize_enclave(unsigned long arg)
 
   /* SBI Call */
   create_args.epm_region.paddr = enclave->epm->pa;
-  create_args.epm_region.size = enclave->epm->size / 2 ; // We doubled it for dyn alloc
+  create_args.epm_region.size = enclave->epm->size;
 
   utm = enclave->utm;
 

@@ -54,14 +54,18 @@ int epm_destroy(epm_t* epm) {
     return 0;
 
   /* free the EPM hold by the enclave */
+  /* START SIM MODIFICATIONS
+   * need to free the whole thing
+   */
   if (epm->is_cma) {
     dma_free_coherent(keystone_dev.this_device,
-        epm->size,
+        epm->oversize,
         (void*) epm->ptr,
         epm->pa);
   } else {
     free_pages(epm->ptr, epm->order);
   }
+  /* END SIM MODIFICCATIONS */
 
   return 0;
 }
@@ -84,10 +88,15 @@ int epm_init(epm_t* epm, unsigned int min_pages)
   order = ilog2(min_pages - 1) + 1;
   count = 0x1 << order;
 
-  // allocate 2x more pages to simulate dynamic page allocation
-  epm->tmp_dynamic_pages = count;
-  count *= 2;
-  order += 1;
+  /* START SIM MODIFICATIONS
+   * allocate more pages to simulate dynamic page allocation
+   */
+
+  order = ilog2(EPM_OVERSIZE) + 1;
+  epm->tmp_dynamic_pages = (0x1 << order) - count;
+  epm->oversize = (0x1 << order) << PAGE_SHIFT;
+  /* STOP SIM MODIFICATIONS */
+
 
   /* prevent kernel from complaining about an invalid argument */
   if (order <= MAX_ORDER)
@@ -99,8 +108,7 @@ int epm_init(epm_t* epm, unsigned int min_pages)
     epm->is_cma = 1;
 
     epm_vaddr = (vaddr_t) dma_alloc_coherent(keystone_dev.this_device,
-      // allocate one more page to simulate dynamic page allocation
-      count << PAGE_SHIFT,
+      epm->oversize,
       &device_phys_addr,
       GFP_KERNEL);
 
@@ -126,8 +134,12 @@ int epm_init(epm_t* epm, unsigned int min_pages)
 
   epm->root_page_table = t;
   epm->pa = __pa(epm_vaddr);
-  epm->order = order;
-  epm->size = count << PAGE_SHIFT;
+
+  /* START SIM MODIFICATIONS */
+  epm->order = ilog2(min_pages) + 1;
+  epm->size = (1<<epm->order) << PAGE_SHIFT;
+  /* STOP SIM MODIFICATIONS */
+
   epm->ptr = epm_vaddr;
 
   return 0;
@@ -151,6 +163,8 @@ int epm_clean_free_list(epm_t* epm)
 int epm_request_extend(epm_t* epm, uintptr_t pages){
   // We doubled the initial allocation for testing, so assume there
   // are good pages available.
+
+  //  keystone_info("EXTEND happening for %lu (%u avail)\r\n", pages, epm->tmp_dynamic_pages);
   if(epm->tmp_dynamic_pages >= pages){
     epm->tmp_dynamic_pages = epm->tmp_dynamic_pages - pages;
     return pages;
