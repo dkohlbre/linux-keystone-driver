@@ -69,8 +69,8 @@ struct free_page_t {
 };
 
 /* START SIM MODIFICATIONS */
-// Request 512MB of pages
-#define EPM_OVERSIZE 131072
+// Request 800MB of pages
+#define EPM_OVERSIZE 204800
 
 /* enclave private memory */
 typedef struct epm_t {

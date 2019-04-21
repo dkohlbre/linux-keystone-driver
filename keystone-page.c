@@ -53,6 +53,8 @@ int epm_destroy(epm_t* epm) {
   if(!epm->ptr || !epm->size)
     return 0;
 
+  //keystone_info("[epm_destroy] final encl size: 0x%lx\r\n",(epm->oversize - (epm->tmp_dynamic_pages << PAGE_SHIFT)));
+
   /* free the EPM hold by the enclave */
   /* START SIM MODIFICATIONS
    * need to free the whole thing
@@ -159,12 +161,13 @@ int epm_request_extend(epm_t* epm, uintptr_t pages){
   // We doubled the initial allocation for testing, so assume there
   // are good pages available.
 
-  //  keystone_info("EXTEND happening for %lu (%u avail)\r\n", pages, epm->tmp_dynamic_pages);
+  //keystone_info("EXTEND happening for %lu (%u avail)\r\n", pages, epm->tmp_dynamic_pages);
   if(epm->tmp_dynamic_pages >= pages){
     epm->tmp_dynamic_pages = epm->tmp_dynamic_pages - pages;
     return pages;
   }
   else{
+    keystone_err("Extend request failed, out of pages!\r\n");
     return 0;
   }
 }
