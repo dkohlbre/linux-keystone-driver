@@ -45,11 +45,13 @@ int destroy_enclave(struct enclave* enclave)
   {
     epm_destroy(epm);
     kfree(epm);
+    enclave->epm = NULL;
   }
   if (utm)
   {
     utm_destroy(utm);
     kfree(utm);
+    enclave->utm = NULL;
   }
   kfree(enclave);
   return 0;
